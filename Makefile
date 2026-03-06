@@ -22,8 +22,8 @@ endif
 
 ## Install Python Dependencies
 requirements: test_environment
-	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
+	uv pip install -U pip setuptools wheel
+	uv pip install -r requirements.txt
 
 ## Make Dataset
 data: requirements

@@ -1,58 +1,106 @@
-# Sales Forecasting & Data Engineering Pipeline
+# Proyecto de ML: Store Sales Time Series Forecasting
 
-Proyecto de Ingeniería de Datos y Machine Learning enfocado en el análisis histórico y la predicción de ventas para optimizar la toma de decisiones comerciales.
-
-## 📈 Resumen del Proyecto
-Este sistema implementa un pipeline completo que abarca desde la ingesta de datos crudos hasta el despliegue de modelos predictivos. El objetivo principal es identificar patrones estacionales, tendencias de mercado y el impacto de variables externas para predecir el volumen de ventas con alta precisión.
+Este proyecto implementa un pipeline profesional de Ciencia de Datos para el análisis y predicción de ventas, utilizando datos de **Hugging Face** y una arquitectura modular de **ETL (Extract, Transform, Load)**.
 
 ---
 
-## 📂 Estructura del Proyecto: Guía de Carpetas
+## 📊 Arquitectura y Flujo de Datos
 
-La arquitectura sigue el estándar *Cookiecutter Data Science*, diseñada para la reproducibilidad y escalabilidad:
+A continuación se muestra cómo fluyen los datos a través del sistema:
 
-*   **`data/`**: El corazón de los datos del proyecto.
-    *   `raw/`: Datos originales e inmutables. Nunca se deben modificar.
-    *   `external/`: Datos de fuentes terceras (ej. festivos, indicadores económicos).
-    *   `interim/`: Datos transformados en etapas intermedias de limpieza.
-    *   `processed/`: Conjuntos de datos finales y canónicos listos para el entrenamiento.
-*   **`models/`**: Almacena los modelos entrenados (archivos `.pkl`, `.h5`, etc.), sus predicciones y resúmenes de rendimiento.
-*   **`notebooks/`**: Cuadernos de Jupyter para Exploratory Data Analysis (EDA) y experimentación rápida. Se nombran por pasos (ej. `1.0-eda-ventas.ipynb`).
-*   **`src/`**: Código fuente modular y reutilizable.
-    *   `data/`: Scripts para la descarga y generación de datasets (`make_dataset.py`).
-    *   `features/`: Ingeniería de variables para transformar datos crudos en features de entrenamiento (`build_features.py`).
-    *   `models/`: Scripts para entrenar (`train_model.py`) y realizar inferencias (`predict_model.py`).
-    *   `visualization/`: Generación de gráficos de resultados y análisis exploratorio.
-*   **`reports/`**: Análisis generados en PDF/HTML y las figuras (`figures/`) utilizadas en la documentación técnica.
-*   **`tests/`**: Suite de pruebas unitarias y de integración para garantizar la calidad del código y la integridad de los datos.
-*   **`docs/`**: Documentación detallada del proyecto (Sphinx).
-*   **`references/`**: Diccionarios de datos, manuales y materiales explicativos.
+```mermaid
+graph TD
+    HF[Hugging Face Repo] -->|1. Extract| RAW(data/raw/ - Parquet)
+    RAW -->|2. Transform| ETL{ETL Script}
+    
+    subgraph "Proceso de Transformación (T)"
+        ETL -->|Limpieza| T1[Conversión de Tipos]
+        ETL -->|Ingeniería| T2[Features Calendario]
+        ETL -->|Agregación| T3[Ventas Diarias]
+    end
+    
+    T1 & T2 & T3 -->|3. Load| PROC(data/processed/ - Parquet)
+    
+    PROC -->|Consumo| EDA[EDA Notebooks]
+    PROC -->|Entrenamiento| ML[Modelos de Predicción]
+    
+    style HF fill:#f9f,stroke:#333,stroke-width:2px
+    style PROC fill:#00ff00,stroke:#333,stroke-width:2px
+    style ETL fill:#3498db,color:#fff
+```
+
+## 🧼 Calidad de Datos e Imputación
+
+El pipeline de transformación aplica técnicas avanzadas para asegurar la integridad de las series temporales:
+
+- **Imputación por Constante (Cero):** Aplicado a la columna `onpromotion`. Si no existe el registro, se asume la ausencia de ofertas.
+- **Interpolación Lineal:** Se utiliza para completar huecos de hasta 3 días en la serie de ventas, manteniendo la tendencia local.
+- **Forward Fill (ffill):** Para huecos mayores o finales, se utiliza el último valor conocido para evitar rupturas en la serie.
+- **Imputación Agrupada:** Todo el proceso se realiza de forma independiente por **Tienda** y **Familia de Producto**, evitando la contaminación de tendencias entre diferentes categorías.
 
 ---
 
-## 🚀 Inicio Rápido
+## 🚀 Estructura del Proyecto
 
-1.  **Configuración del entorno:**
-    ```bash
-    make create_environment
-    activate entorno
-    pip install -r requirements.txt
+La organización del código sigue los estándares de la industria para proyectos de Machine Learning:
+
+```mermaid
+graph LR
+    Root[proyecto_ml_data] --> Data[data/]
+    Root --> Src[src/]
+    Root --> Notebooks[notebooks/]
+    Root --> Logs[logs/]
+    
+    Data --> Raw[raw/ - Datos Brutos]
+    Data --> Processed[processed/ - Datos Limpios]
+    
+    Src --> DataSrc[data/]
+    Src --> Utils[utils/]
+    Src --> Vis[visualization/]
+    
+    DataSrc --> Download[download_hf.py]
+    DataSrc --> Process[process_sales.py]
+    
+    Notebooks --> N0[0.0-download-data.ipynb]
+    Notebooks --> N1[1.0-eda-ventas.ipynb]
+```
+
+---
+
+## 🛠️ Cómo empezar
+
+### 1. Entorno Virtual y Dependencias (usando `uv`)
+Este proyecto utiliza **`uv`** para una gestión de paquetes ultra-rápida. 
+
+- **Activar entorno:**
+  ```powershell
+  .\.venv\Scripts\activate
+  ```
+- **Instalar dependencias:**
+  ```powershell
+  uv pip install -r requirements.txt
+  ```
+
+*Nota: `uv` es hasta 100x más rápido que `pip`. Si no lo tienes instalado, puedes instalarlo con `pip install uv`.*
+
+### 2. Ejecución del Pipeline
+El proyecto está diseñado para ejecutarse de forma secuencial:
+
+1.  **Descarga (Extract):**
+    ```powershell
+    python src/data/download_hf_dataset.py
+    ```
+2.  **Procesamiento (Transform & Load):**
+    ```powershell
+    python src/data/process_sales.py
+    ```
+3.  **Visualización:**
+    ```powershell
+    python src/visualization/generate_reports.py
     ```
 
-2.  **Procesar datos y entrenar:**
-    ```bash
-    make data
-    make train
-    ```
-
-## 🛠 Tecnologías Utilizadas
-*   **Python 3.x**
-*   **Pandas & NumPy** (Procesamiento)
-*   **Scikit-learn / XGBoost** (Modelado)
-*   **Matplotlib & Seaborn** (Visualización)
-*   **Pytest** (Testing)
+## 📝 Monitoreo y Logging
+El sistema utiliza un logger centralizado que registra cada paso del proceso en la carpeta `logs/`. Esto permite auditar la salud del pipeline y detectar errores en la transformación de los datos de forma temprana.
 
 ---
-<p align="center">
-  <small>Basado en el <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">Cookiecutter Data Science Template</a>.</small>
-</p>
+*Desarrollado como un entorno profesional de Machine Learning con soporte para diagramas Mermaid.*
