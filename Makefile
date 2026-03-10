@@ -20,6 +20,10 @@ endif
 # COMMANDS                                                                      #
 #################################################################################
 
+## Install WSL and Ubuntu (Run as Admin in PowerShell)
+setup_wsl:
+	powershell.exe -ExecutionPolicy Bypass -File setup_wsl.ps1
+
 ## Install Python Dependencies
 requirements: test_environment
 	uv pip install -U pip setuptools wheel
