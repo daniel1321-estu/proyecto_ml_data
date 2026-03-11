@@ -17,41 +17,45 @@ def main(input_filepath, output_filepath):
     logger.info('--- Iniciando Pipeline ETL ---')
 
     # 1. Carga de datos
-    logger.info(f'Cargando datos desde: {input_filepath}')
-    df = pd.read_csv(Path(input_filepath) / 'ventas.csv')
+    input_file = Path(input_filepath) / 'ventas.csv'
+    logger.info(f'Cargando datos desde: {input_file}')
+    
+    # Leemos solo una parte si es muy grande, o todo si la memoria lo permite.
+    # El dataset tiene 3M de filas, pandas lo maneja bien en la mayoría de sistemas.
+    df = pd.read_csv(input_file)
 
-    # 2. Procesamiento (Limpieza básica para demostrar en la sustentación)
-    logger.info('Limpiando datos: eliminando nulos y formateando fechas...')
+    # 2. Procesamiento (Limpieza para el dataset real de Store Sales)
+    logger.info('Procesando datos reales de Store Sales...')
     
-    # Rellenar categorías vacías con 'Desconocido'
-    df['categoria'] = df['categoria'].fillna('Desconocido')
+    # Asegurar tipos
+    df['date'] = pd.to_datetime(df['date'])
+    df['sales'] = pd.to_numeric(df['sales'], errors='coerce')
     
-    # Eliminar filas donde falte la fecha o el precio (datos críticos)
-    df = df.dropna(subset=['fecha', 'precio_unitario'])
+    # Rellenar nulos básicos
+    df['sales'] = df['sales'].fillna(0)
     
-    # Formatear fecha
-    df['fecha'] = pd.to_datetime(df['fecha'])
-    
-    # Añadir columna de Total (Demuestra transformación de datos)
-    df['total_venta'] = df['cantidad'] * df['precio_unitario']
+    # Agregación diaria por familia (opcional, pero ayuda a la visualización)
+    # logger.info('Agregando ventas por fecha y familia...')
+    # df = df.groupby(['date', 'family']).agg({'sales': 'sum', 'onpromotion': 'sum'}).reset_index()
 
-    # 3. Guardado de artefactos (Cumple Punto 4 de la sustentación)
+    # 3. Guardado de artefactos
     output_dir = Path(output_filepath)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    final_path = output_dir / 'ventas_limpias.csv'
-    df.to_csv(final_path, index=False)
+    final_csv_path = output_dir / 'ventas_limpias.csv'
+    df.to_csv(final_csv_path, index=False)
     
-    logger.info(f'Pipeline finalizado. Datos guardados en: {final_path}')
+    parquet_dir = output_dir / 'store_sales_hf'
+    parquet_dir.mkdir(parents=True, exist_ok=True)
+    final_parquet_path = parquet_dir / 'sales_processed.parquet'
+    df.to_parquet(final_parquet_path, index=False)
+    
+    logger.info(f'Pipeline finalizado. Datos guardados en: {final_csv_path} y {final_parquet_path}')
     logger.info(f'Total de registros procesados: {len(df)}')
 
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    # find .env automagically by walking up directories until it's found, then
-    # load up the .env entries as environment variables
     load_dotenv(find_dotenv())
-
     main()
