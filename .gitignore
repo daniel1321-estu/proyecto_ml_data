@@ -1,0 +1,22 @@
+# Entornos
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Ignorar archivos de datos procesados (se generan con el pipeline)
+data/processed/
+reports/figures/
+
+# Ignorar archivos excesivamente grandes (>100MB) para GitHub
+*.csv
+*.parquet
+!data/raw/*.csv
+!data/raw/*.parquet
+
+# Modelos / artefactos
+*.pkl
+*.joblib
+
+# Logs y temporales
+*.log
+.DS_Store
