@@ -62,6 +62,26 @@ lint:
 dashboard:
 	$(VENV_BIN)/streamlit run src/visualization/dashboard.py
 
+## Compare different models (Step 1)
+model-compare:
+	@echo ">>> Evaluando diferentes modelos..."
+	$(PYTHON) src/models/train_and_evaluate.py
+
+## Train the best model (Random Forest) (Step 2)
+model-train:
+	@echo ">>> Entrenando el modelo final (Random Forest)..."
+	$(PYTHON) src/models/train_best_model.py
+
+## Run all tests (Unit and Functional)
+test:
+	@echo ">>> Ejecutando pruebas unitarias y funcionales..."
+	$(PYTHON) -m unittest discover tests
+
+## Run the full data pipeline (ETL + EDA)
+pipeline:
+	@echo ">>> Ejecutando el pipeline completo (ETL + EDA)..."
+	$(PYTHON) src/main_pipeline.py
+
 .DEFAULT_GOAL := help
 
 help:
@@ -72,3 +92,7 @@ help:
 	@echo "  clean              Remove temporary python files"
 	@echo "  lint               Check code style"
 	@echo "  dashboard          Run streamlit dashboard"
+	@echo "  model-compare      Compare performance of 5 different models"
+	@echo "  model-train        Train and save the best model (Random Forest)"
+	@echo "  test               Run all unit and functional tests"
+	@echo "  pipeline           Run the complete data pipeline (ETL + EDA)"
