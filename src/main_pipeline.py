@@ -9,9 +9,9 @@ import logging
 import subprocess
 from pathlib import Path
 
-# Add 'src' to path so we can import our modules
-# This script is located in src/
+# Add project root and 'src' to path so we can import our modules
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(PROJECT_ROOT))
 sys.path.append(str(PROJECT_ROOT / "src"))
 
 from data.extract import extract_data
